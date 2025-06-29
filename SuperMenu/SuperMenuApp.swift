@@ -5,20 +5,38 @@ import ServiceManagement
 import AppKit
 internal import UniformTypeIdentifiers
 
-// ClipboardManager to monitor clipboard changes and maintain history
-import Combine
-
 class ClipboardManager: ObservableObject {
     static let shared = ClipboardManager()
 
+    @Published var isMonitoring: Bool = true {
+        didSet {
+            if isMonitoring {
+                startMonitoring()
+            } else {
+                stopMonitoring()
+            }
+        }
+    }
     @Published var history: [String] = []
     private var changeCount: Int = NSPasteboard.general.changeCount
     private var timer: Timer?
 
     private init() {
+        if isMonitoring {
+            startMonitoring()
+        }
+    }
+
+    private func startMonitoring() {
+        guard timer == nil else { return }
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             self?.checkClipboard()
         }
+    }
+
+    private func stopMonitoring() {
+        timer?.invalidate()
+        timer = nil
     }
 
     private func checkClipboard() {
@@ -55,13 +73,20 @@ struct ClipboardHistoryView: View {
 
             List {
                 ForEach(clipboardManager.history, id: \.self) { item in
-                    Text(item)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                        .onTapGesture {
-                            clipboardManager.copyToClipboard(item)
-                            presentationMode.wrappedValue.dismiss()
+                    HStack {
+                        Text(item)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .onTapGesture {
+                                clipboardManager.copyToClipboard(item)
+                                presentationMode.wrappedValue.dismiss()
+                            }
+                        Button("Remove") {
+                            if let i = clipboardManager.history.firstIndex(where: { $0 == item }) {
+                                clipboardManager.history.remove(at: i)
+                            }
                         }
+                    }
                 }
             }
             .frame(minWidth: 300, minHeight: 400)

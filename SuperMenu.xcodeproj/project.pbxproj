@@ -115,6 +115,7 @@
 				"xattr -cr ~/Library/Developer/Xcode/DerivedData || echo Clear",
 				"",
 				"",
+				"",
 			);
 		};
 /* End PBXShellScriptBuildPhase section */

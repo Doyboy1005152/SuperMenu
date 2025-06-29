@@ -4,18 +4,12 @@
   },
   "groups" : [
     {
+      "blend-mode" : "darken",
       "layers" : [
         {
-          "glass" : false,
-          "image-name" : "bolt.fill.svg",
-          "name" : "bolt.fill",
-          "position" : {
-            "scale" : 5,
-            "translation-in-points" : [
-              0,
-              0
-            ]
-          }
+          "glass" : true,
+          "image-name" : "bolt.png",
+          "name" : "bolt"
         }
       ],
       "shadow" : {
@@ -29,9 +23,8 @@
     }
   ],
   "supported-platforms" : {
-    "circles" : [
-      "watchOS"
-    ],
-    "squares" : "shared"
+    "squares" : [
+      "macOS"
+    ]
   }
 }

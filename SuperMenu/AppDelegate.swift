@@ -7,8 +7,8 @@ internal import UniformTypeIdentifiers
 
 class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     @AppStorage("shouldCleanupDMGs") var shouldCleanupDMGs: Bool = false
-    var settingsWindow: NSWindow?
     var clipboardHistoryWindow: NSWindow?
+    var settingsWindow: NSWindow?
     
     var superShortcutEnabled: Bool {
         get { UserDefaults.standard.bool(forKey: "superShortcutEnabled") }
@@ -24,20 +24,23 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             return
         }
 
-        let newWindow = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 420, height: 240),
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 800, height: 500),
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
         )
-        newWindow.center()
-        newWindow.setFrameAutosaveName("Settings")
-        newWindow.title = "Settings"
-        newWindow.contentView = NSHostingView(rootView: SettingsView())
-        newWindow.isReleasedWhenClosed = false
-        newWindow.makeKeyAndOrderFront(nil)
+        window.center()
+        window.title = "Settings"
+        window.contentView = NSHostingView(
+            rootView: SettingsView()
+                .frame(minWidth: 800, minHeight: 500)
+                .padding()
+        )
+        window.isReleasedWhenClosed = false
+        window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
-        settingsWindow = newWindow
+        settingsWindow = window
     }
 
     @objc func showClipboardHistory() {
@@ -118,14 +121,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         let openSettingsItem = NSMenuItem(title: "Settings...", action: #selector(showSettingsWindow), keyEquivalent: ",")
         openSettingsItem.keyEquivalentModifierMask = [.command]
         menu.addItem(openSettingsItem)
-
-        menu.addItem(NSMenuItem(title: "Quit SuperMenu", action: #selector(quit), keyEquivalent: "q"))
+        
+        let clipboardMenuItem = NSMenuItem(title: "Clipboard History", action: #selector(showClipboardHistory), keyEquivalent: "")
+        clipboardMenuItem.target = self
+        menu.addItem(clipboardMenuItem)
 
         let aboutItem = NSMenuItem(title: "About Me", action: #selector(openPortfolio), keyEquivalent: "")
         menu.addItem(aboutItem)
 
         let privacyItem = NSMenuItem(title: "Privacy Policy", action: #selector(openPrivacyPolicy), keyEquivalent: "")
         menu.addItem(privacyItem)
+        
+        menu.addItem(NSMenuItem(title: "Quit SuperMenu", action: #selector(quit), keyEquivalent: "q"))
 
         statusItem?.menu = menu
 
