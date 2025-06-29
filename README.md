@@ -26,7 +26,3 @@ SuperMenu is a macOS menu bar utility designed to simplify common developer and 
 ## Disclaimer
 
 This tool is provided for personal use only. The developer is not affiliated with any third-party apps referenced within the software.
-
-## License
-
-All rights reserved unless otherwise specified.
