@@ -10,7 +10,7 @@ SuperMenu is a macOS menu bar utility designed to simplify common developer and 
 
 ## Download
 
-[Download SuperMenu 1.1 Beta 1](./SuperMenu%201.1%20Beta%201/SuperMenu%201.1%20Beta%201.zip)
+[Download SuperMenu 1.1 Beta 2](./Builds/SuperMenu%201.1%20Beta%202/SuperMenu.zip)
 
 ## Installation
 
