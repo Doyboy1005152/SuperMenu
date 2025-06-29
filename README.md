@@ -1,20 +1,32 @@
-SuperMenu License
+# SuperMenu
 
-Copyright © 2024 Liam Reynolds
+SuperMenu is a macOS menu bar utility designed to simplify common developer and productivity workflows. It includes features such as:
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the “Software”), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software.
+- Automatic DMG detection and installation
+- Clipboard history with global shortcut support
+- Custom app launcher using "Super Shortcut" (⌘ + ⌥ + ⌃ + ⇧ + key)
+- Launch at login support
+- Optional DMG cleanup and ejection
 
-The above rights are granted under the condition that:
+## Download
 
-1. The name “Liam Reynolds” must remain clearly visible in the Software’s
-   credits, about screen, or similar attribution section in any redistributed
-   or derivative work.
+[Download SuperMenu 1.1 Beta 1](./SuperMenu%201.1%20Beta%201/SuperMenu%201.1%20Beta%201.zip)
 
-2. This notice and the copyright information must be included in all copies
-   or substantial portions of the Software.
+## Installation
 
-THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND.
+1. Download and unzip the app using the link above.
+2. Drag `SuperMenu.app` into your `/Applications` folder.
+3. Launch it from Applications. The icon will appear in your menu bar.
+
+## Permissions
+
+- **Accessibility**: Enable Accessibility permissions in System Settings → Privacy & Security → Accessibility so the app can monitor keyboard shortcuts.
+- **Login Items**: Optional. Enable if you'd like SuperMenu to launch on startup.
+
+## Disclaimer
+
+This tool is provided for personal use only. The developer is not affiliated with any third-party apps referenced within the software.
+
+## License
+
+All rights reserved unless otherwise specified.
