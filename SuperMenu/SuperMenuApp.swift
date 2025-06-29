@@ -1,8 +1,8 @@
-import SwiftUI
+import AppKit
 import Carbon
 import Combine
 import ServiceManagement
-import AppKit
+import SwiftUI
 internal import UniformTypeIdentifiers
 
 class ClipboardManager: ObservableObject {
@@ -17,6 +17,7 @@ class ClipboardManager: ObservableObject {
             }
         }
     }
+
     @Published var history: [String] = []
     private var changeCount: Int = NSPasteboard.general.changeCount
     private var timer: Timer?
@@ -44,10 +45,10 @@ class ClipboardManager: ObservableObject {
         if pb.changeCount != changeCount {
             changeCount = pb.changeCount
             if let copiedString = pb.string(forType: .string), !copiedString.isEmpty {
-                if self.history.first != copiedString {
-                    self.history.insert(copiedString, at: 0)
-                    if self.history.count > 50 {
-                        self.history.removeLast()
+                if history.first != copiedString {
+                    history.insert(copiedString, at: 0)
+                    if history.count > 50 {
+                        history.removeLast()
                     }
                 }
             }
@@ -112,7 +113,6 @@ struct SuperMenuApp: App {
     }
 }
 
-
 struct SettingsView: View {
     @AppStorage("shouldCleanupDMGs") private var shouldCleanupDMGs: Bool = false
     @AppStorage("autoDMGEnabled") private var autoDMGEnabled: Bool = true
@@ -126,6 +126,7 @@ struct SettingsView: View {
         }
         return [:]
     }()
+
     @State private var newKey: String = ""
     @State private var hasAccessibilityPermission = AXIsProcessTrusted()
 
@@ -142,7 +143,7 @@ struct SettingsView: View {
             VStack(alignment: .leading) {
                 Form {
                     Toggle("Launch at login", isOn: $launchAtLogin)
-                        .onChange(of: launchAtLogin) { newValue in
+                        .onChange(of: launchAtLogin) { _, newValue in
                             if newValue {
                                 try? SMAppService.mainApp.register()
                             } else {
@@ -188,12 +189,12 @@ struct SettingsView: View {
                             (NSApp.delegate as? AppDelegate)?.updateSuperShortcutMonitoring()
                         }
                     Text("""
-Each shortcut requires ⌘ + ⌥ + ⌃ + ⇧ plus a key.
+                    Each shortcut requires ⌘ + ⌥ + ⌃ + ⇧ plus a key.
 
-Tip: Use Raycast’s Hyper Key setting to map Caps Lock to all modifiers. When held, pressing a key sends ⌘⌥⇧⌃ + key, which will trigger your Super Shortcut.
-""")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                    Tip: Use Raycast’s Hyper Key setting to map Caps Lock to all modifiers. When held, pressing a key sends ⌘⌥⇧⌃ + key, which will trigger your Super Shortcut.
+                    """)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
 
                     ForEach(superShortcutBindings.sorted(by: { $0.key < $1.key }), id: \.key) { key, url in
                         HStack {
@@ -270,10 +271,10 @@ Tip: Use Raycast’s Hyper Key setting to map Caps Lock to all modifiers. When h
                         Text("Made by Liam Reynolds")
                     }
                     Section(header: Text("Recommended Productivity Apps")) {
-                        Label {
-                            Link("Raycast", destination: URL(string: "https://www.raycast.com/")!)
-                        } icon: {
+                        HStack {
                             Image(systemName: "sparkles")
+                            Link("Raycast", destination: URL(string: "https://www.raycast.com/")!)
+                                .lineLimit(nil)
                         }
 
                         Label {
@@ -292,6 +293,11 @@ Tip: Use Raycast’s Hyper Key setting to map Caps Lock to all modifiers. When h
                             .font(.footnote)
                             .foregroundColor(.secondary)
                             .padding(.top, 4)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Section(header: Text("Github")) {
+                        Link("View SuperMenu on GitHub", destination: URL(string: "https://github.com/Doyboy1005152/SuperMenu")!)
+                        Link("Developer GitHub Profile", destination: URL(string: "https://github.com/Doyboy1005152")!)
                     }
                 }
                 .padding()
