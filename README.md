@@ -9,8 +9,8 @@ SuperMenu is a macOS menu bar utility designed to simplify common developer and 
 - Optional DMG cleanup and ejection
 
 ## Download
-
-[Download SuperMenu 1.1 Beta 2](./Builds/SuperMenu%201.1%20Beta%202/SuperMenu.zip)
+**Download the .zip file and then drag the .app file into your applications folder.**
+[Download SuperMenu 1.1 Beta 2](./Builds/SuperMenu%201.1%20Beta%202)
 
 ## Installation
 
