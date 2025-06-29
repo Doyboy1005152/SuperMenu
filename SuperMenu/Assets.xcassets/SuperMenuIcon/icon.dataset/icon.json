@@ -1,0 +1,37 @@
+{
+  "fill" : {
+    "automatic-gradient" : "display-p3:0.50902,0.42963,0.92609,1.00000"
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "glass" : false,
+          "image-name" : "bolt.fill.svg",
+          "name" : "bolt.fill",
+          "position" : {
+            "scale" : 5,
+            "translation-in-points" : [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}

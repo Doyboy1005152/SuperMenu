@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 90;
 	objects = {
 
 /* Begin PBXFileReference section */
@@ -21,10 +21,8 @@
 /* Begin PBXFrameworksBuildPhase section */
 		11E684C32E0E2F770083A508 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
@@ -55,17 +53,14 @@
 				11E684C22E0E2F770083A508 /* Sources */,
 				11E684C32E0E2F770083A508 /* Frameworks */,
 				11E684C42E0E2F770083A508 /* Resources */,
+				113D65C42E10987600B9E087 /* ShellScript */,
 			);
 			buildRules = (
-			);
-			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
 				11E684C82E0E2F770083A508 /* SuperMenu */,
 			);
 			name = SuperMenu;
-			packageProductDependencies = (
-			);
 			productName = SuperMenu;
 			productReference = 11E684C62E0E2F770083A508 /* SuperMenu.app */;
 			productType = "com.apple.product-type.application";
@@ -94,7 +89,7 @@
 			);
 			mainGroup = 11E684BD2E0E2F770083A508;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
+			preferredProjectObjectVersion = 90;
 			productRefGroup = 11E684C72E0E2F770083A508 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -107,25 +102,33 @@
 /* Begin PBXResourcesBuildPhase section */
 		11E684C42E0E2F770083A508 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		113D65C42E10987600B9E087 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			shellPath = /bin/sh;
+			shellScript = (
+				"xattr -cr ~/Library/Developer/Xcode/DerivedData || echo Clear",
+				"",
+				"",
+			);
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		11E684C22E0E2F770083A508 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		11E684CF2E0E2F770083A508 /* Debug */ = {
+		11E684CF2E0E2F770083A508 /* Debug configuration for PBXProject "SuperMenu" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -188,7 +191,7 @@
 			};
 			name = Debug;
 		};
-		11E684D02E0E2F770083A508 /* Release */ = {
+		11E684D02E0E2F770083A508 /* Release configuration for PBXProject "SuperMenu" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -243,18 +246,27 @@
 			};
 			name = Release;
 		};
-		11E684D22E0E2F770083A508 /* Debug */ = {
+		11E684D22E0E2F770083A508 /* Debug configuration for PBXNativeTarget "SuperMenu" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = SuperMenuIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGNING_ALLOWED = No;
+				CODE_SIGN_ENTITLEMENTS = SuperMenu/SuperMenu.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				ENABLE_APP_SANDBOX = YES;
+				DEVELOPMENT_TEAM = G8PK99SSBC;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				"INFOPLIST_FILE[sdk=*]" = "$(SRCROOT)/SuperMenu/Info.plist";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "This app uses Apple Events to control disk operations and interact with the system.";
+				INFOPLIST_KEY_NSDownloadsFolderUsageDescription = "to check for .dmg files";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -272,18 +284,27 @@
 			};
 			name = Debug;
 		};
-		11E684D32E0E2F770083A508 /* Release */ = {
+		11E684D32E0E2F770083A508 /* Release configuration for PBXNativeTarget "SuperMenu" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = SuperMenuIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGNING_ALLOWED = No;
+				CODE_SIGN_ENTITLEMENTS = SuperMenu/SuperMenu.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				ENABLE_APP_SANDBOX = YES;
+				DEVELOPMENT_TEAM = G8PK99SSBC;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				"INFOPLIST_FILE[sdk=*]" = "$(SRCROOT)/SuperMenu/Info.plist";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "This app uses Apple Events to control disk operations and interact with the system.";
+				INFOPLIST_KEY_NSDownloadsFolderUsageDescription = "to check for .dmg files";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -307,19 +328,17 @@
 		11E684C12E0E2F770083A508 /* Build configuration list for PBXProject "SuperMenu" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				11E684CF2E0E2F770083A508 /* Debug */,
-				11E684D02E0E2F770083A508 /* Release */,
+				11E684CF2E0E2F770083A508 /* Debug configuration for PBXProject "SuperMenu" */,
+				11E684D02E0E2F770083A508 /* Release configuration for PBXProject "SuperMenu" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		11E684D12E0E2F770083A508 /* Build configuration list for PBXNativeTarget "SuperMenu" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				11E684D22E0E2F770083A508 /* Debug */,
-				11E684D32E0E2F770083A508 /* Release */,
+				11E684D22E0E2F770083A508 /* Debug configuration for PBXNativeTarget "SuperMenu" */,
+				11E684D32E0E2F770083A508 /* Release configuration for PBXNativeTarget "SuperMenu" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
