@@ -2,6 +2,7 @@ import SwiftUI
 import Foundation
 import AppKit
 import Carbon
+import CoreLocation
 internal import UniformTypeIdentifiers
 import ServiceManagement
 
