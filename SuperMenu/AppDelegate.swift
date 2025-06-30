@@ -7,8 +7,13 @@ internal import UniformTypeIdentifiers
 
 class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     @AppStorage("shouldCleanupDMGs") var shouldCleanupDMGs: Bool = false
+    @AppStorage("isDiskManagementEnabled") var isDiskManagementEnabled: Bool = false
+    @AppStorage("isClipboardHistoryEnabled") var isClipboardHistoryEnabled: Bool = false
+    @AppStorage("isToDoListEnabled") var isToDoListEnabled: Bool = true
+    
     var clipboardHistoryWindow: NSWindow?
     var settingsWindow: NSWindow?
+    var toDoListWindow: NSWindow?
     
     var superShortcutEnabled: Bool {
         get { UserDefaults.standard.bool(forKey: "superShortcutEnabled") }
@@ -126,6 +131,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         clipboardMenuItem.target = self
         menu.addItem(clipboardMenuItem)
 
+        let toDoListItem = NSMenuItem(title: "To-Do List", action: #selector(showToDoList), keyEquivalent: "")
+        toDoListItem.target = self
+        menu.addItem(toDoListItem)
+
         let aboutItem = NSMenuItem(title: "About Me", action: #selector(openPortfolio), keyEquivalent: "")
         menu.addItem(aboutItem)
 
@@ -161,6 +170,28 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         }
 
         updateSuperShortcutMonitoring()
+    }
+
+    @objc func showToDoList() {
+        if let window = toDoListWindow {
+            window.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 400, height: 300),
+            styleMask: [.titled, .closable, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        window.center()
+        window.title = "To-Do List"
+        window.contentView = NSHostingView(rootView: ToDoListView())
+        window.isReleasedWhenClosed = false
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        toDoListWindow = window
     }
     
     func updateSuperShortcutMonitoring() {

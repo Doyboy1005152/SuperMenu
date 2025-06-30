@@ -11,6 +11,8 @@ struct SettingsView: View {
     @AppStorage("autoDMGEnabled") private var autoDMGEnabled: Bool = true
     @AppStorage("launchAtLogin") private var launchAtLogin: Bool = SMAppService.mainApp.status == .enabled
     @AppStorage("superShortcutEnabled") private var superShortcutEnabled: Bool = false
+    @AppStorage("isToDoListEnabled") private var isToDoListEnabled: Bool = true
+    @AppStorage("shouldPromptBeforeTaskDeletion") private var shouldPromptBeforeTaskDeletion: Bool = true
 
     @State private var superShortcutBindings: [String: URL] = {
         if let data = UserDefaults.standard.data(forKey: "superShortcutBindings"),
@@ -156,6 +158,18 @@ struct SettingsView: View {
             }
             .tabItem {
                 Text("Clipboard")
+            }
+            
+            VStack(alignment: .leading) {
+                Form {
+                    Toggle("To-Do List Enabled", isOn: $isToDoListEnabled)
+                    if isToDoListEnabled {
+                        Toggle("Show Alert Before Deleting Task", isOn: $shouldPromptBeforeTaskDeletion)
+                    }
+                }
+            }
+            .tabItem {
+                Text("To-Do List")
             }
 
             VStack(alignment: .leading) {
