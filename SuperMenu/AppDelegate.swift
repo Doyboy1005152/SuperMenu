@@ -7,8 +7,8 @@ internal import UniformTypeIdentifiers
 
 class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     @AppStorage("shouldCleanupDMGs") var shouldCleanupDMGs: Bool = false
-    @AppStorage("isDiskManagementEnabled") var isDiskManagementEnabled: Bool = false
-    @AppStorage("isClipboardHistoryEnabled") var isClipboardHistoryEnabled: Bool = false
+    @AppStorage("isDiskManagementEnabled") var isDiskManagementEnabled: Bool = true
+    @AppStorage("isClipboardHistoryEnabled") var isClipboardHistoryEnabled: Bool = true
     @AppStorage("isToDoListEnabled") var isToDoListEnabled: Bool = true
     
     var clipboardHistoryWindow: NSWindow?
@@ -39,7 +39,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         window.title = "Settings"
         window.contentView = NSHostingView(
             rootView: SettingsView()
-                .frame(minWidth: 800, minHeight: 500)
+                .frame(minWidth: 1200, minHeight: 500)
                 .padding()
         )
         window.isReleasedWhenClosed = false
@@ -120,12 +120,64 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         }
 
         let menu = NSMenu()
+
+        let diskMenu = NSMenu(title: "Disk Management")
+        let diskItem = NSMenuItem(title: "Disk Management", action: nil, keyEquivalent: "")
+        diskItem.submenu = diskMenu
+
+        if isDiskManagementEnabled {
+            menu.addItem(diskItem)
+        }
         let ejectAllDisksItem = NSMenuItem(title: "Eject All Disks", action: #selector(ejectAllDisks), keyEquivalent: "")
-        menu.addItem(ejectAllDisksItem)
+        ejectAllDisksItem.target = self
+        diskMenu.addItem(ejectAllDisksItem)
+
+        let disksSubmenu = NSMenu(title: "Disks")
+        let disksMenuItem = NSMenuItem(title: "Disks", action: nil, keyEquivalent: "")
+        disksMenuItem.submenu = disksSubmenu
+        diskMenu.addItem(disksMenuItem)
+
+        let task = Process()
+        task.launchPath = "/usr/sbin/diskutil"
+        task.arguments = ["list", "-plist"]
+        let pipe = Pipe()
+        task.standardOutput = pipe
+        do {
+            try task.run()
+            task.waitUntilExit()
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            if let plist = try? PropertyListSerialization.propertyList(from: data, format: nil),
+               let dict = plist as? [String: Any],
+               let disks = dict["AllDisksAndPartitions"] as? [[String: Any]] {
+                for disk in disks {
+                    if let device = disk["DeviceIdentifier"] as? String {
+                        var title = device
+                        if let content = disk["Content"] as? String, content != "Apple_partition_scheme" {
+                            if let volumeName = disk["VolumeName"] as? String {
+                                title = "\(volumeName) (\(device))"
+                            } else if let apfsVolumes = disk["APFSVolumes"] as? [[String: Any]],
+                                      let firstVolume = apfsVolumes.first,
+                                      let apfsName = firstVolume["VolumeName"] as? String {
+                                title = "\(apfsName) (\(device))"
+                            }
+                        }
+                        let diskItem = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+                        disksSubmenu.addItem(diskItem)
+                    }
+                }
+            }
+        } catch {
+            print("Error listing disks for submenu: \(error)")
+        }
 
         let openSettingsItem = NSMenuItem(title: "Settings...", action: #selector(showSettingsWindow), keyEquivalent: ",")
         openSettingsItem.keyEquivalentModifierMask = [.command]
         menu.addItem(openSettingsItem)
+        
+        let restartItem = NSMenuItem(title: "Restart App", action: #selector(restartApp), keyEquivalent: "r")
+        restartItem.keyEquivalentModifierMask = [.command, .shift]
+        restartItem.target = self
+        menu.addItem(restartItem)
         
         let clipboardMenuItem = NSMenuItem(title: "Clipboard History", action: #selector(showClipboardHistory), keyEquivalent: "")
         clipboardMenuItem.target = self
@@ -170,6 +222,29 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         }
 
         updateSuperShortcutMonitoring()
+    }
+
+    @objc func restartApp() {
+        let appPath = Bundle.main.bundlePath
+        let script = """
+        #!/bin/bash
+        APP_PATH="\(appPath)"
+        while pgrep -f "$APP_PATH" > /dev/null; do
+          sleep 0.5
+        done
+        open "$APP_PATH"
+        """
+
+        let tempURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("supermenu_restart.sh")
+        try? script.write(to: tempURL, atomically: true, encoding: .utf8)
+        try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: tempURL.path)
+
+        let task = Process()
+        task.launchPath = "/bin/bash"
+        task.arguments = [tempURL.path]
+        try? task.run()
+
+        NSApp.terminate(nil)
     }
 
     @objc func showToDoList() {
@@ -412,3 +487,4 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
     
 }
+

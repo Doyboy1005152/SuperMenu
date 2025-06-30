@@ -10,7 +10,7 @@ class ClipboardManager: ObservableObject {
 
     @Published var isMonitoring: Bool = true {
         didSet {
-            if isMonitoring { 
+            if isMonitoring {
                 startMonitoring()
             } else {
                 stopMonitoring()

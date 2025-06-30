@@ -13,6 +13,7 @@ struct SettingsView: View {
     @AppStorage("superShortcutEnabled") private var superShortcutEnabled: Bool = false
     @AppStorage("isToDoListEnabled") private var isToDoListEnabled: Bool = true
     @AppStorage("shouldPromptBeforeTaskDeletion") private var shouldPromptBeforeTaskDeletion: Bool = true
+    @AppStorage("isDiskManagementEnabled") private var isDiskManagementEnabled: Bool = true
 
     @State private var superShortcutBindings: [String: URL] = {
         if let data = UserDefaults.standard.data(forKey: "superShortcutBindings"),
@@ -62,7 +63,18 @@ struct SettingsView: View {
                 Spacer()
             }
             .tabItem {
-                Text("DMG")
+                Text("Apps")
+            }
+            
+            VStack(alignment: .leading) {
+                Form {
+                    Toggle("Disk Management Enabled", isOn: $isDiskManagementEnabled)
+                }
+                .padding()
+                Spacer()
+            }
+            .tabItem {
+                Text("Disks")
             }
 
             VStack(alignment: .leading) {
