@@ -173,7 +173,7 @@ struct SettingsView: View {
             VStack(alignment: .leading) {
                 if !hasAccessibilityPermission {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Accessibility permission is required to detect Super Shortcuts.")
+                        Text("Accessibility permission is required to detect Super Shortcuts. (If the error persists click About > Refresh Permissions)")
                             .foregroundColor(.red)
                         Button("Open System Preferences") {
                             let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
@@ -198,7 +198,7 @@ struct SettingsView: View {
 
                     ForEach(superShortcutBindings.sorted(by: { $0.key < $1.key }), id: \.key) { key, url in
                         HStack {
-                            Text("⌘\(key.uppercased())")
+                            Text("⌘⌥⌃⇧\(key.uppercased())")
                             Spacer()
                             Text(url.lastPathComponent)
                             Button("Open") {
@@ -298,6 +298,25 @@ struct SettingsView: View {
                     Section(header: Text("Github")) {
                         Link("View SuperMenu on GitHub", destination: URL(string: "https://github.com/Doyboy1005152/SuperMenu")!)
                         Link("Developer GitHub Profile", destination: URL(string: "https://github.com/Doyboy1005152")!)
+                    }
+                    Section(header: Text("Permissions")) {
+                        Button("Refresh Permissions") {
+                            _ = Bundle.main.bundlePath
+                            let appId = Bundle.main.bundleIdentifier ?? ""
+
+                            let script = """
+                            do shell script "tccutil reset Accessibility \(appId)"
+                            """
+
+                            var error: NSDictionary?
+                            if let scriptObject = NSAppleScript(source: script) {
+                                scriptObject.executeAndReturnError(&error)
+                            }
+
+                            // Reopen the accessibility system preferences page
+                            let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
+                            NSWorkspace.shared.open(url)
+                        }
                     }
                 }
                 .padding()
