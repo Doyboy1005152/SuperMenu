@@ -6,7 +6,7 @@ import AppKit
 internal import UniformTypeIdentifiers
 
 class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
-    let currentVersion = "1.0.0"
+    let currentVersion = 1
     @AppStorage("shouldCleanupDMGs") var shouldCleanupDMGs: Bool = false
     @AppStorage("isDiskManagementEnabled") var isDiskManagementEnabled: Bool = true
     @AppStorage("isClipboardHistoryEnabled") var isClipboardHistoryEnabled: Bool = true
@@ -15,6 +15,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     var clipboardHistoryWindow: NSWindow?
     var settingsWindow: NSWindow?
     var toDoListWindow: NSWindow?
+    // Window to show update progress
+    var updateWindow: NSWindow?
+
+    // Published update message for progress window
+    @Published var updateMessage: String = "Checking for updates..."
     
     var superShortcutEnabled: Bool {
         get { UserDefaults.standard.bool(forKey: "superShortcutEnabled") }
@@ -175,11 +180,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         openSettingsItem.keyEquivalentModifierMask = [.command]
         menu.addItem(openSettingsItem)
         
-        let updateItem = NSMenuItem(title: "Check for Updates", action: #selector(checkForUpdates), keyEquivalent: "r")
-        updateItem.keyEquivalentModifierMask = [.command, .shift]
-        updateItem.target = self
-        menu.addItem(updateItem)
-        
         let clipboardMenuItem = NSMenuItem(title: "Clipboard History", action: #selector(showClipboardHistory), keyEquivalent: "")
         clipboardMenuItem.target = self
         menu.addItem(clipboardMenuItem)
@@ -225,81 +225,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         updateSuperShortcutMonitoring()
     }
 
-    @objc func checkForUpdates() {
-        let versionURL = URL(string: "http://localhost:8000/api/version")!
-        let updateZipURL = URL(string: "http://localhost:8000/api/update")!
-        let downloadsDir = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
-        let localZipURL = downloadsDir.appendingPathComponent("SuperMenuUpdate.zip")
-        let extractedAppURL = downloadsDir.appendingPathComponent("SuperMenuUpdated.app")
-
-        let versionTask = URLSession.shared.dataTask(with: versionURL) { data, _, _ in
-            guard let data = data,
-                  let remoteVersion = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
-                  self.compareVersions(remoteVersion, self.currentVersion) else {
-                DispatchQueue.main.async {
-                    let alert = NSAlert()
-                    alert.messageText = "You're already on the latest version."
-                    alert.runModal()
-                }
-                return
-            }
-
-            DispatchQueue.main.async {
-                let downloadingAlert = NSAlert()
-                downloadingAlert.messageText = "Downloading Update..."
-                downloadingAlert.runModal()
-            }
-
-            let semaphore = DispatchSemaphore(value: 0)
-            let task = URLSession.shared.downloadTask(with: updateZipURL) { tempURL, _, _ in
-                if let tempURL = tempURL {
-                    try? FileManager.default.removeItem(at: localZipURL)
-                    try? FileManager.default.copyItem(at: tempURL, to: localZipURL)
-                }
-                semaphore.signal()
-            }
-            task.resume()
-            semaphore.wait()
-
-            let unzipTask = Process()
-            unzipTask.launchPath = "/usr/bin/unzip"
-            unzipTask.arguments = ["-o", localZipURL.path, "-d", downloadsDir.path]
-            unzipTask.launch()
-            unzipTask.waitUntilExit()
-
-            DispatchQueue.main.async {
-                let alert = NSAlert()
-                alert.messageText = "The New Version Has Been Downloaded and Unzipped"
-                alert.informativeText = """
-                The new version has been unzipped to your Downloads folder.
-
-                Please quit SuperMenu and move the new app into your Applications folder.
-                """
-                alert.addButton(withTitle: "Open Downloads Folder")
-                alert.addButton(withTitle: "OK")
-
-                let response = alert.runModal()
-                if response == .alertFirstButtonReturn {
-                    NSWorkspace.shared.open(downloadsDir)
-                }
-            }
-        }
-
-        versionTask.resume()
-    }
-
-    func compareVersions(_ remote: String, _ local: String) -> Bool {
-        let remoteParts = remote.split(separator: ".").compactMap { Int($0) }
-        let localParts = local.split(separator: ".").compactMap { Int($0) }
-
-        for i in 0..<max(remoteParts.count, localParts.count) {
-            let r = i < remoteParts.count ? remoteParts[i] : 0
-            let l = i < localParts.count ? localParts[i] : 0
-            if r > l { return true }
-            if r < l { return false }
-        }
-        return false
-    }
+    // compareVersions function removed
 
     @objc func showToDoList() {
         if let window = toDoListWindow {
