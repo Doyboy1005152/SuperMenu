@@ -17,3 +17,9 @@ struct SuperMenuApp: App {
         }
     }
 }
+
+extension String {
+    func toInt() -> Int? {
+        return Int(self.filter { $0.isNumber })
+    }
+}

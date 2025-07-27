@@ -14,11 +14,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     @AppStorage("isToDoListEnabled") var isToDoListEnabled: Bool = true
     @AppStorage("areDeveloperToolsEnabled") var areDevToolsEnabled: Bool = false
     @AppStorage("isCURLTestEnabled") var isCURLTestEnabled: Bool = false
+    @AppStorage("isPortCheckingEnabled") var isPortCheckingEnabled: Bool = true
     
     var clipboardHistoryWindow: NSWindow?
     var settingsWindow: NSWindow?
     var toDoListWindow: NSWindow?
     var cURLWindow: NSWindow?
+    var portsWindow: NSWindow?
     
     // Script shortcut bindings stored in UserDefaults
     var scriptShortcutBindings: [String: URL] {
@@ -118,6 +120,32 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         newWindow.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
         cURLWindow = newWindow
+    }
+    
+    @objc func openPortsWindow() {
+        if let window = portsWindow {
+            window.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 800, height: 500),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        window.center()
+        window.title = "Ports"
+        window.contentView = NSHostingView(
+            rootView: PortsView()
+                .frame(minWidth: 1200, minHeight: 500)
+                .padding()
+        )
+        window.isReleasedWhenClosed = false
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        portsWindow = window
     }
 
     var statusItem: NSStatusItem?
@@ -226,14 +254,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         } catch {
             print("Error listing disks for submenu: \(error)")
         }
-
-        let openSettingsItem = NSMenuItem(title: "Settings...", action: #selector(showSettingsWindow), keyEquivalent: ",")
-        openSettingsItem.keyEquivalentModifierMask = [.command]
-        menu.addItem(openSettingsItem)
-        
-        let clipboardMenuItem = NSMenuItem(title: "Clipboard History", action: #selector(showClipboardHistory), keyEquivalent: "")
-        clipboardMenuItem.target = self
-        menu.addItem(clipboardMenuItem)
         
         let devToolsSubmenu = NSMenu(title: "Dev Tools")
         let devToolsItem = NSMenuItem(title: "Dev Tools", action: nil, keyEquivalent: "")
@@ -244,7 +264,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                 let cURLTestItem = NSMenuItem(title: "cURL Test", action: #selector(openCURLWindow), keyEquivalent: "")
                 devToolsSubmenu.addItem(cURLTestItem)
             }
+            if isPortCheckingEnabled {
+                let portCheckingItem = NSMenuItem(title: "Port Management", action: #selector(openPortsWindow), keyEquivalent: "")
+                devToolsSubmenu.addItem(portCheckingItem)
+            }
         }
+
+        let openSettingsItem = NSMenuItem(title: "Settings...", action: #selector(showSettingsWindow), keyEquivalent: ",")
+        openSettingsItem.keyEquivalentModifierMask = [.command]
+        menu.addItem(openSettingsItem)
+        
+        let clipboardMenuItem = NSMenuItem(title: "Clipboard History", action: #selector(showClipboardHistory), keyEquivalent: "")
+        clipboardMenuItem.target = self
+        menu.addItem(clipboardMenuItem)
 
         let toDoListItem = NSMenuItem(title: "To-Do List", action: #selector(showToDoList), keyEquivalent: "")
         toDoListItem.target = self

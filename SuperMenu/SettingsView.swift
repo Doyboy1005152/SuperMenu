@@ -12,6 +12,8 @@ struct SettingsView: View {
     @AppStorage("isDiskManagementEnabled") private var isDiskManagementEnabled: Bool = true
     @AppStorage("areDeveloperToolsEnabled") private var areDeveloperToolsEnabled: Bool = false
     @AppStorage("isCURLTestEnabled") private var isCURLTestEnabled: Bool = false
+    @AppStorage("showWarningBeforePortKill") private var showWarningBeforePortKill: Bool = true
+    @AppStorage("isPortCheckingEnabled") private var isPortCheckingEnabled: Bool = true
 
     @State private var superShortcutBindings: [String: URL] = {
         if let data = UserDefaults.standard.data(forKey: "superShortcutBindings"),
@@ -201,12 +203,17 @@ struct SettingsView: View {
                 
                 VStack(alignment: .leading) {
                     Form {
-                        Toggle("Enable Developer Tools", isOn: $areDeveloperToolsEnabled)
-                            .padding()
+                        Section {
+                            Toggle("Enable Developer Tools", isOn: $areDeveloperToolsEnabled)
+                        }
                         if areDeveloperToolsEnabled {
                             Section {
                                 Toggle("cURL Test Enabled", isOn: $isCURLTestEnabled)
-                                    .padding()
+                            }
+                            
+                            Section {
+                                Toggle("Port Management Enabled", isOn: $isPortCheckingEnabled)
+                                Toggle("Warn Before Killing Ports", isOn: $showWarningBeforePortKill)
                             }
                         }
                     }
