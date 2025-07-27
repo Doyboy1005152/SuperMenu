@@ -1,18 +1,4 @@
-# Xcode
-*.xcuserstate
 *.xcworkspace
-DerivedData/
-*.xcodeproj/project.xcworkspace/
+*.xcuserstate
 *.xcodeproj/xcuserdata/
 *.xcodeproj/project.xcworkspace/
-*.swiftpm
-.build/
-.idea/
-Pods/
-
-# Secrets
-*.mobileprovision
-*.p12
-*.pem
-*.p8
-Secrets.plist
