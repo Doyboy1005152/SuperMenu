@@ -1,9 +1,5 @@
-import AppKit
-import Carbon
 import Combine
-import ServiceManagement
 import SwiftUI
-internal import UniformTypeIdentifiers
 
 class ClipboardManager: ObservableObject {
     static let shared = ClipboardManager()

@@ -1,9 +1,4 @@
-import AppKit
-import Carbon
-import Combine
-import ServiceManagement
 import SwiftUI
-internal import UniformTypeIdentifiers
 
 @main
 struct SuperMenuApp: App {

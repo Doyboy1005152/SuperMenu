@@ -6,15 +6,35 @@ import AppKit
 internal import UniformTypeIdentifiers
 
 class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
+    var runningProcesses = [Process]()
     let currentVersion = 1
     @AppStorage("shouldCleanupDMGs") var shouldCleanupDMGs: Bool = false
     @AppStorage("isDiskManagementEnabled") var isDiskManagementEnabled: Bool = true
     @AppStorage("isClipboardHistoryEnabled") var isClipboardHistoryEnabled: Bool = true
     @AppStorage("isToDoListEnabled") var isToDoListEnabled: Bool = true
+    @AppStorage("areDeveloperToolsEnabled") var areDevToolsEnabled: Bool = false
+    @AppStorage("isCURLTestEnabled") var isCURLTestEnabled: Bool = false
     
     var clipboardHistoryWindow: NSWindow?
     var settingsWindow: NSWindow?
     var toDoListWindow: NSWindow?
+    var cURLWindow: NSWindow?
+    
+    // Script shortcut bindings stored in UserDefaults
+    var scriptShortcutBindings: [String: URL] {
+        get {
+            if let data = UserDefaults.standard.data(forKey: "scriptShortcutBindings"),
+               let bindings = try? JSONDecoder().decode([String: URL].self, from: data) {
+                return bindings
+            }
+            return [:]
+        }
+        set {
+            if let data = try? JSONEncoder().encode(newValue) {
+                UserDefaults.standard.set(data, forKey: "scriptShortcutBindings")
+            }
+        }
+    }
     // Window to show update progress
     var updateWindow: NSWindow?
 
@@ -27,6 +47,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
     
     var superShortcutMonitor: Any?
+    var superShortcutURLMonitor: Any?
+    var superShortcutScriptMonitor: Any?
     
     @objc func showSettingsWindow() {
         if let window = settingsWindow {
@@ -74,6 +96,28 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         newWindow.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
         clipboardHistoryWindow = newWindow
+    }
+    
+    @objc func openCURLWindow() {
+        if let window = cURLWindow {
+            window.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
+        let newWindow = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 350, height: 450),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        newWindow.center()
+        newWindow.title = "API/cURL Request Test"
+        newWindow.contentView = NSHostingView(rootView: CURLView())
+        newWindow.isReleasedWhenClosed = false
+        newWindow.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        cURLWindow = newWindow
     }
 
     var statusItem: NSStatusItem?
@@ -139,10 +183,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         diskMenu.addItem(ejectAllDisksItem)
 
         let disksSubmenu = NSMenu(title: "Disks")
-        let disksMenuItem = NSMenuItem(title: "Disks<<", action: nil, keyEquivalent: "")
+        let disksMenuItem = NSMenuItem(title: "Disks", action: nil, keyEquivalent: "")
         disksMenuItem.submenu = disksSubmenu
         diskMenu.addItem(disksMenuItem)
 
+        let refreshItem = NSMenuItem(title: "Refresh Disks", action: #selector(refreshDisks(_:)), keyEquivalent: "")
+        refreshItem.target = self
+        disksSubmenu.addItem(refreshItem)
+        disksSubmenu.addItem(NSMenuItem.separator())
+
+        populateDisksSubmenu(disksSubmenu)
+        
         let task = Process()
         task.launchPath = "/usr/sbin/diskutil"
         task.arguments = ["list", "-plist"]
@@ -183,6 +234,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         let clipboardMenuItem = NSMenuItem(title: "Clipboard History", action: #selector(showClipboardHistory), keyEquivalent: "")
         clipboardMenuItem.target = self
         menu.addItem(clipboardMenuItem)
+        
+        let devToolsSubmenu = NSMenu(title: "Dev Tools")
+        let devToolsItem = NSMenuItem(title: "Dev Tools", action: nil, keyEquivalent: "")
+        devToolsItem.submenu = devToolsSubmenu
+        if areDevToolsEnabled {
+            menu.addItem(devToolsItem)
+            if isCURLTestEnabled {
+                let cURLTestItem = NSMenuItem(title: "cURL Test", action: #selector(openCURLWindow), keyEquivalent: "")
+                devToolsSubmenu.addItem(cURLTestItem)
+            }
+        }
 
         let toDoListItem = NSMenuItem(title: "To-Do List", action: #selector(showToDoList), keyEquivalent: "")
         toDoListItem.target = self
@@ -249,23 +311,131 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         toDoListWindow = window
     }
     
+    func populateDisksSubmenu(_ menu: NSMenu) {
+        let task = Process()
+        task.launchPath = "/usr/sbin/diskutil"
+        task.arguments = ["list", "-plist"]
+        let pipe = Pipe()
+        task.standardOutput = pipe
+
+        do {
+            try task.run()
+            task.waitUntilExit()
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+
+            if let plist = try? PropertyListSerialization.propertyList(from: data, format: nil),
+               let dict = plist as? [String: Any],
+               let disks = dict["AllDisksAndPartitions"] as? [[String: Any]] {
+                for disk in disks {
+                    if let device = disk["DeviceIdentifier"] as? String {
+                        var title = device
+                        if let content = disk["Content"] as? String, content != "Apple_partition_scheme" {
+                            if let volumeName = disk["VolumeName"] as? String {
+                                title = "\(volumeName) (\(device))"
+                            } else if let apfsVolumes = disk["APFSVolumes"] as? [[String: Any]],
+                                      let firstVolume = apfsVolumes.first,
+                                      let apfsName = firstVolume["VolumeName"] as? String {
+                                title = "\(apfsName) (\(device))"
+                            }
+                        }
+                        let diskItem = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+                        menu.addItem(diskItem)
+                    }
+                }
+            }
+        } catch {
+            print("Error listing disks for submenu: \(error)")
+        }
+    }
+    
+    @objc func refreshDisks(_ sender: NSMenuItem) {
+        if let submenu = sender.menu {
+            submenu.removeAllItems()
+
+            let refreshItem = NSMenuItem(title: "Refresh Disks", action: #selector(refreshDisks(_:)), keyEquivalent: "")
+            refreshItem.target = self
+            submenu.addItem(refreshItem)
+            submenu.addItem(NSMenuItem.separator())
+
+            populateDisksSubmenu(submenu)
+        }
+    }
+    
     func updateSuperShortcutMonitoring() {
+        // Remove existing monitors if any
+        if let monitor = superShortcutURLMonitor {
+            NSEvent.removeMonitor(monitor)
+            superShortcutURLMonitor = nil
+        }
+        if let monitor = superShortcutScriptMonitor {
+            NSEvent.removeMonitor(monitor)
+            superShortcutScriptMonitor = nil
+        }
         if let monitor = superShortcutMonitor {
             NSEvent.removeMonitor(monitor)
             superShortcutMonitor = nil
         }
 
-        if superShortcutEnabled {
-            superShortcutMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { event in
-                let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
-                let requiredFlags: NSEvent.ModifierFlags = [.command, .option, .control, .shift]
-                if flags.contains(requiredFlags) {
-                    let pressedKey = event.charactersIgnoringModifiers?.lowercased() ?? ""
-                    if let data = UserDefaults.standard.data(forKey: "superShortcutBindings"),
-                       let bindings = try? JSONDecoder().decode([String: URL].self, from: data),
-                       let url = bindings[pressedKey] {
-                        print("Launching \(url)")
-                        NSWorkspace.shared.open(url)
+        // Add local monitor to suppress system beep for super shortcut keys
+        NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            let requiredFlags: NSEvent.ModifierFlags = [.command, .option, .control, .shift]
+            if flags == requiredFlags {
+                return nil // suppress system beep
+            }
+            return event
+        }
+
+        guard superShortcutEnabled else { return }
+
+        // Global monitor for URL launch shortcuts
+        superShortcutURLMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { event in
+            let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            let requiredFlags: NSEvent.ModifierFlags = [.command, .option, .control, .shift]
+            if flags == requiredFlags {
+                let pressedKey = event.charactersIgnoringModifiers?.lowercased() ?? ""
+                if let data = UserDefaults.standard.data(forKey: "superShortcutBindings"),
+                   let bindings = try? JSONDecoder().decode([String: URL].self, from: data),
+                   let url = bindings[pressedKey] {
+                    print("Launching URL shortcut for key: \(pressedKey) -> \(url)")
+                    NSWorkspace.shared.open(url)
+                }
+            }
+        }
+
+        // Global monitor for script execution shortcuts
+        superShortcutScriptMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { event in
+            let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            let requiredFlags: NSEvent.ModifierFlags = [.command, .option, .control, .shift]
+            if flags == requiredFlags {
+                let pressedKey = event.charactersIgnoringModifiers?.lowercased() ?? ""
+                if let scriptURL = self.scriptShortcutBindings[pressedKey] {
+                    print("Executing script shortcut for key: \(pressedKey) at path: \(scriptURL.path)")
+                    if self.runningProcesses == nil {
+                        self.runningProcesses = []
+                    }
+                    let task = Process()
+                    task.executableURL = URL(fileURLWithPath: "/bin/bash")
+                    task.arguments = [scriptURL.path]
+                    task.standardOutput = Pipe()
+                    task.standardError = Pipe()
+
+                    self.runningProcesses.append(task)
+
+                    do {
+                        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: scriptURL.path)
+                        try task.run()
+
+                        DispatchQueue.global().async {
+                            task.waitUntilExit()
+                            DispatchQueue.main.async {
+                                if let index = self.runningProcesses.firstIndex(of: task) {
+                                    self.runningProcesses.remove(at: index)
+                                }
+                            }
+                        }
+                    } catch {
+                        print("Failed to execute script at \(scriptURL.path): \(error)")
                     }
                 }
             }
@@ -291,7 +461,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
 
     @objc func menuButtonClicked() {
-        // You may want to show the main menu or perform another action here.
+        
     }
 
     @objc func ejectAllDisks() {
@@ -467,4 +637,5 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
     
 }
+
 
