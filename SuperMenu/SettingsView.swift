@@ -14,6 +14,8 @@ struct SettingsView: View {
     @AppStorage("isCURLTestEnabled") private var isCURLTestEnabled: Bool = false
     @AppStorage("showWarningBeforePortKill") private var showWarningBeforePortKill: Bool = true
     @AppStorage("isPortCheckingEnabled") private var isPortCheckingEnabled: Bool = true
+    
+    let appDelegate = AppDelegate()
 
     @State private var superShortcutBindings: [String: URL] = {
         if let data = UserDefaults.standard.data(forKey: "superShortcutBindings"),
@@ -137,18 +139,30 @@ struct SettingsView: View {
                                 }
                             }
                         }
-                        HStack {
-                            TextField("Key", text: $newKey)
-                                .frame(width: 50)
-                            Button("Pick Shell Script") {
-                                guard newKey.count == 1 else { return }
-                                let panel = NSOpenPanel()
-                                panel.allowsMultipleSelection = false
-                                panel.allowedContentTypes = [.shellScript]
-                                if panel.runModal() == .OK, let url = panel.url {
-                                    superShortcutBindings[newKey.lowercased()] = url
-                                    saveSuperShortcutBindings()
-                                    newKey = ""
+                        //Disabled temporarily
+                        if false {
+                            HStack {
+                                TextField("Key", text: $newKey)
+                                    .frame(width: 50)
+                                Button("Pick Shell Script") {
+                                    guard newKey.count == 1 else { return }
+                                    let panel = NSOpenPanel()
+                                    panel.allowsMultipleSelection = false
+                                    panel.allowedContentTypes = [.shellScript]
+                                    if panel.runModal() == .OK, let url = panel.url {
+                                        do {
+                                            let chmodProcess = Process()
+                                            chmodProcess.executableURL = URL(fileURLWithPath: "/bin/chmod")
+                                            chmodProcess.arguments = ["+x", url.path]
+                                            try chmodProcess.run()
+                                            chmodProcess.waitUntilExit()
+                                        } catch {
+                                            print("Failed to make script executable via chmod: \(error)")
+                                        }
+                                        superShortcutBindings[newKey.lowercased()] = URL(fileURLWithPath: "/bin/zsh -c \"\(url.deletingLastPathComponent().path)/./\(url.lastPathComponent)\"")
+                                        saveSuperShortcutBindings()
+                                        newKey = ""
+                                    }
                                 }
                             }
                         }

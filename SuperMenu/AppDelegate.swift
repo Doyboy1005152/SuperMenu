@@ -1,8 +1,8 @@
-import SwiftUI
+import AppKit
 import Carbon
 import Combine
 import ServiceManagement
-import AppKit
+import SwiftUI
 internal import UniformTypeIdentifiers
 
 class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
@@ -15,13 +15,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     @AppStorage("areDeveloperToolsEnabled") var areDevToolsEnabled: Bool = false
     @AppStorage("isCURLTestEnabled") var isCURLTestEnabled: Bool = false
     @AppStorage("isPortCheckingEnabled") var isPortCheckingEnabled: Bool = true
-    
+    @AppStorage("webRequestTestingEnabled") var webRequestTestingEnabled: Bool = true
+    @State var firstRun: Bool = true
+
     var clipboardHistoryWindow: NSWindow?
     var settingsWindow: NSWindow?
     var toDoListWindow: NSWindow?
     var cURLWindow: NSWindow?
     var portsWindow: NSWindow?
-    
+    var HTTPTestWindow: NSWindow?
+
     // Script shortcut bindings stored in UserDefaults
     var scriptShortcutBindings: [String: URL] {
         get {
@@ -37,21 +40,23 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             }
         }
     }
+
     // Window to show update progress
     var updateWindow: NSWindow?
 
     // Published update message for progress window
     @Published var updateMessage: String = "Checking for updates..."
-    
+
     var superShortcutEnabled: Bool {
         get { UserDefaults.standard.bool(forKey: "superShortcutEnabled") }
         set { UserDefaults.standard.set(newValue, forKey: "superShortcutEnabled") }
     }
-    
+
     var superShortcutMonitor: Any?
     var superShortcutURLMonitor: Any?
     var superShortcutScriptMonitor: Any?
-    
+    var statusItems = [NSStatusItem]()
+
     @objc func showSettingsWindow() {
         if let window = settingsWindow {
             window.makeKeyAndOrderFront(nil)
@@ -99,7 +104,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         NSApp.activate(ignoringOtherApps: true)
         clipboardHistoryWindow = newWindow
     }
-    
+
     @objc func openCURLWindow() {
         if let window = cURLWindow {
             window.makeKeyAndOrderFront(nil)
@@ -121,7 +126,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         NSApp.activate(ignoringOtherApps: true)
         cURLWindow = newWindow
     }
-    
+
     @objc func openPortsWindow() {
         if let window = portsWindow {
             window.makeKeyAndOrderFront(nil)
@@ -157,7 +162,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     override init() {
         super.init()
         let eventSpec = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
-        InstallEventHandler(GetEventDispatcherTarget(), { (_, eventRef, userData) -> OSStatus in
+        InstallEventHandler(GetEventDispatcherTarget(), { _, eventRef, _ -> OSStatus in
             var hotKeyID = EventHotKeyID()
             GetEventParameter(eventRef, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID), nil, MemoryLayout.size(ofValue: hotKeyID), nil, &hotKeyID)
             if hotKeyID.id == 1 {
@@ -188,8 +193,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         if !checkAccessibilityPermissions() {
             print("Accessibility permission is required for global keyboard shortcuts. Please enable it in System Preferences → Security & Privacy → Privacy → Accessibility.")
         }
-        
+
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+
+        let menu = NSMenu()
+
+        statusItem?.menu = menu
 
         if let button = statusItem?.button {
             button.image = NSImage(systemSymbolName: "bolt.fill", accessibilityDescription: "SuperMenu")
@@ -197,12 +206,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             button.action = #selector(menuButtonClicked)
         }
 
-        let menu = NSMenu()
-
         let diskMenu = NSMenu(title: "Disk Management")
         let diskItem = NSMenuItem(title: "Disk Management", action: nil, keyEquivalent: "")
         diskItem.submenu = diskMenu
-        
+
         if isDiskManagementEnabled {
             menu.addItem(diskItem)
         }
@@ -221,7 +228,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         disksSubmenu.addItem(NSMenuItem.separator())
 
         populateDisksSubmenu(disksSubmenu)
-        
+
         let task = Process()
         task.launchPath = "/usr/sbin/diskutil"
         task.arguments = ["list", "-plist"]
@@ -254,16 +261,24 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         } catch {
             print("Error listing disks for submenu: \(error)")
         }
-        
+
         let devToolsSubmenu = NSMenu(title: "Dev Tools")
         let devToolsItem = NSMenuItem(title: "Dev Tools", action: nil, keyEquivalent: "")
         devToolsItem.submenu = devToolsSubmenu
         if areDevToolsEnabled {
             menu.addItem(devToolsItem)
-            if isCURLTestEnabled {
-                let cURLTestItem = NSMenuItem(title: "cURL Test", action: #selector(openCURLWindow), keyEquivalent: "")
-                devToolsSubmenu.addItem(cURLTestItem)
+            if webRequestTestingEnabled {
+                let webRequestMenu = NSMenu(title: "Web Request Tests")
+                let webRequestItem = NSMenuItem(title: "Web Request Tests", action: nil, keyEquivalent: "")
+                webRequestItem.submenu = webRequestMenu
+                devToolsSubmenu.addItem(webRequestItem)
+                let cURLTestItem = NSMenuItem(title: "cURL", action: #selector(openCURLWindow), keyEquivalent: "")
+                cURLTestItem.target = self
+                webRequestMenu.addItem(cURLTestItem)
+                let HTTPTestItem = NSMenuItem(title: "HTTP", action: #selector(showHTTPTestWindow), keyEquivalent: "")
+                webRequestMenu.addItem(HTTPTestItem)
             }
+
             if isPortCheckingEnabled {
                 let portCheckingItem = NSMenuItem(title: "Port Management", action: #selector(openPortsWindow), keyEquivalent: "")
                 devToolsSubmenu.addItem(portCheckingItem)
@@ -273,7 +288,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         let openSettingsItem = NSMenuItem(title: "Settings...", action: #selector(showSettingsWindow), keyEquivalent: ",")
         openSettingsItem.keyEquivalentModifierMask = [.command]
         menu.addItem(openSettingsItem)
-        
+
         let clipboardMenuItem = NSMenuItem(title: "Clipboard History", action: #selector(showClipboardHistory), keyEquivalent: "")
         clipboardMenuItem.target = self
         menu.addItem(clipboardMenuItem)
@@ -287,7 +302,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
 
         let privacyItem = NSMenuItem(title: "Privacy Policy", action: #selector(openPrivacyPolicy), keyEquivalent: "")
         menu.addItem(privacyItem)
-        
+
         menu.addItem(NSMenuItem(title: "Quit SuperMenu", action: #selector(quit), keyEquivalent: "q"))
 
         statusItem?.menu = menu
@@ -342,7 +357,29 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         NSApp.activate(ignoringOtherApps: true)
         toDoListWindow = window
     }
-    
+
+    @objc func showHTTPTestWindow() {
+        if let window = HTTPTestWindow {
+            window.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 400, height: 500),
+            styleMask: [.titled, .closable, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        window.center()
+        window.title = "HTTP Request Testing"
+        window.contentView = NSHostingView(rootView: HTTPView())
+        window.isReleasedWhenClosed = false
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        toDoListWindow = window
+    }
+
     func populateDisksSubmenu(_ menu: NSMenu) {
         let task = Process()
         task.launchPath = "/usr/sbin/diskutil"
@@ -379,7 +416,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             print("Error listing disks for submenu: \(error)")
         }
     }
-    
+
     @objc func refreshDisks(_ sender: NSMenuItem) {
         if let submenu = sender.menu {
             submenu.removeAllItems()
@@ -392,7 +429,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             populateDisksSubmenu(submenu)
         }
     }
-    
+
     func updateSuperShortcutMonitoring() {
         // Remove existing monitors if any
         if let monitor = superShortcutURLMonitor {
@@ -443,9 +480,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                 let pressedKey = event.charactersIgnoringModifiers?.lowercased() ?? ""
                 if let scriptURL = self.scriptShortcutBindings[pressedKey] {
                     print("Executing script shortcut for key: \(pressedKey) at path: \(scriptURL.path)")
-                    if self.runningProcesses == nil {
-                        self.runningProcesses = []
-                    }
+                    self.runningProcesses = []
                     let task = Process()
                     task.executableURL = URL(fileURLWithPath: "/bin/bash")
                     task.arguments = [scriptURL.path]
@@ -473,13 +508,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             }
         }
     }
-    
+
     @objc func openPrivacyPolicy() {
-        
     }
-    
+
     @objc func openPortfolio() {
-        
     }
 
     @objc func toggleLaunchAtLogin(_ sender: NSMenuItem) {
@@ -493,7 +526,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
 
     @objc func menuButtonClicked() {
-        
     }
 
     @objc func ejectAllDisks() {
@@ -529,8 +561,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                 for volume in volumes {
                     if let mountPoint = volume["MountPoint"] as? String,
                        mountPoint.hasPrefix("/Volumes/"),
-                       let  _ = volume["DeviceIdentifier"] as? String {
-
+                       let _ = volume["DeviceIdentifier"] as? String {
                         let ejectTask = Process()
                         ejectTask.launchPath = "/usr/sbin/diskutil"
                         ejectTask.arguments = ["eject", device]
@@ -561,7 +592,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     @objc func quit() {
         NSApp.terminate(nil)
     }
-    
+
     @objc func toggleAutoDMG(_ sender: NSMenuItem) {
         autoDMGEnabled.toggle()
         sender.state = autoDMGEnabled ? .on : .off
@@ -572,7 +603,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             dmgWatcherSource = nil
         }
     }
-    
+
     func watchDownloadsForDMG() {
         guard autoDMGEnabled else { return }
         print("Started watching Downloads folder for DMG files")
@@ -667,7 +698,4 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             }
         }
     }
-    
 }
-
-
