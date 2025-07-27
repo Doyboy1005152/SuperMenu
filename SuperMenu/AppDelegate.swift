@@ -174,7 +174,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         let diskMenu = NSMenu(title: "Disk Management")
         let diskItem = NSMenuItem(title: "Disk Management", action: nil, keyEquivalent: "")
         diskItem.submenu = diskMenu
-
+        
         if isDiskManagementEnabled {
             menu.addItem(diskItem)
         }
