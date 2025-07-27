@@ -160,7 +160,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         if !checkAccessibilityPermissions() {
             print("Accessibility permission is required for global keyboard shortcuts. Please enable it in System Preferences → Security & Privacy → Privacy → Accessibility.")
         }
-
+        
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
         if let button = statusItem?.button {
