@@ -120,5 +120,8 @@ struct PortsView: View {
             inputPort = ""
             sentFromList = false
         }
+        if killSuccess {
+            SmallPopover.showCenteredMessage("Port Killed", systemImage: "checkmark", duration: 1.5)
+        }
     }
 }

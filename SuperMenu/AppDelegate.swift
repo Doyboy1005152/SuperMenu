@@ -398,7 +398,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         pasteboard.clearContents()
         pasteboard.setString(UUIDString, forType: .string)
 
-        SmallPopover.showCenteredMessage("Copied to clipboard (:")
+        SmallPopover.showCenteredMessage("Copied UUID to clipboard", systemImage: "document.on.clipboard", secondSystemImage: "checkmark", duration: 2.0)
     }
 
     @objc func showHTTPTestWindow() {
