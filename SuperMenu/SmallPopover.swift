@@ -1,5 +1,4 @@
 import SwiftUI
-import AppKit
 
 class SmallPopover {
     public static func showCenteredMessage(_ message: String) {
@@ -28,7 +27,7 @@ class SmallPopover {
             Text(message)
                 .foregroundColor(.white)
                 .padding()
-                .background(Color.black.opacity(0.25))
+                .background(Color.black.opacity(0.2))
                 .cornerRadius(10)
         )
         hostingView.frame = NSRect(x: 0, y: 0, width: 300, height: 100)
@@ -42,7 +41,7 @@ class SmallPopover {
             context.duration = 0.2
             window.animator().alphaValue = 1
         }) {
-            // Delay 1 second, then fade out
+            // Delay 2 seconds, then fade out
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                 NSAnimationContext.runAnimationGroup({ context in
                     context.duration = 0.5

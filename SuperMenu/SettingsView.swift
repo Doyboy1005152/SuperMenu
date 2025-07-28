@@ -13,7 +13,7 @@ struct SettingsView: View {
     @AppStorage("areDeveloperToolsEnabled") private var areDeveloperToolsEnabled: Bool = false
     @AppStorage("isCURLTestEnabled") private var isCURLTestEnabled: Bool = false
     @AppStorage("showWarningBeforePortKill") private var showWarningBeforePortKill: Bool = true
-    
+
     let appDelegate = AppDelegate()
 
     @State private var superShortcutBindings: [String: URL] = {
@@ -48,6 +48,23 @@ struct SettingsView: View {
                                     try? SMAppService.mainApp.unregister()
                                 }
                             }
+                        Button("Refresh Permissions") {
+                            _ = Bundle.main.bundlePath
+                            let appId = Bundle.main.bundleIdentifier ?? ""
+
+                            let script = """
+                            do shell script "tccutil reset Accessibility \(appId)"
+                            """
+
+                            var error: NSDictionary?
+                            if let scriptObject = NSAppleScript(source: script) {
+                                scriptObject.executeAndReturnError(&error)
+                            }
+
+                            // Reopen the accessibility system preferences page
+                            let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
+                            NSWorkspace.shared.open(url)
+                        }
                     }
                     .padding()
                     Spacer()
@@ -55,7 +72,7 @@ struct SettingsView: View {
                 .tabItem {
                     Text("General")
                 }
-                
+
                 VStack(alignment: .leading) {
                     Form {
                         Toggle("Automatically clean up DMGs after install", isOn: $shouldCleanupDMGs)
@@ -67,7 +84,7 @@ struct SettingsView: View {
                 .tabItem {
                     Text("Apps")
                 }
-                
+
                 VStack(alignment: .leading) {
                     Form {
                         Toggle("Disk Management Enabled", isOn: $isDiskManagementEnabled)
@@ -78,7 +95,7 @@ struct SettingsView: View {
                 .tabItem {
                     Text("Disks")
                 }
-                
+
                 VStack(alignment: .leading) {
                     if !hasAccessibilityPermission {
                         VStack(alignment: .leading, spacing: 8) {
@@ -98,13 +115,13 @@ struct SettingsView: View {
                                 (NSApp.delegate as? AppDelegate)?.updateSuperShortcutMonitoring()
                             }
                         Text("""
-                    Each shortcut requires ⌘ + ⌥ + ⌃ + ⇧ plus a key.
-                    
-                    Tip: Use Raycast’s Hyper Key setting to map Caps Lock to all modifiers. When held, pressing a key sends ⌘⌥⇧⌃ + key, which will trigger your Super Shortcut.
-                    """)
+                        Each shortcut requires ⌘ + ⌥ + ⌃ + ⇧ plus a key.
+
+                        Tip: Use Raycast’s Hyper Key setting to map Caps Lock to all modifiers. When held, pressing a key sends ⌘⌥⇧⌃ + key, which will trigger your Super Shortcut.
+                        """)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
-                        
+
                         ForEach(superShortcutBindings.sorted(by: { $0.key < $1.key }), id: \.key) { key, url in
                             HStack {
                                 Text("⌘⌥⌃⇧\(key.uppercased())")
@@ -122,10 +139,13 @@ struct SettingsView: View {
                             }
                             .padding(7)
                         }
-                        
+                        .onChange(of: superShortcutEnabled) { _, new in
+                            if !new { newKey = "" }
+                        }
+
                         HStack {
                             TextField("Key", text: $newKey)
-                                .frame(width: 50)
+                                .frame(width: 55)
                             Button("Pick Application") {
                                 guard newKey.count == 1 else { return }
                                 let panel = NSOpenPanel()
@@ -137,8 +157,10 @@ struct SettingsView: View {
                                     newKey = ""
                                 }
                             }
+                            .disabled(newKey.count != 1)
                         }
-                        //Disabled temporarily
+                        .disabled(!superShortcutEnabled)
+                        // Disabled temporarily
                         if false {
                             HStack {
                                 TextField("Key", text: $newKey)
@@ -175,7 +197,7 @@ struct SettingsView: View {
                 .onAppear {
                     hasAccessibilityPermission = AXIsProcessTrusted()
                 }
-                
+
                 VStack(alignment: .leading) {
                     Form {
                         Toggle("Enable Clipboard Monitoring", isOn: $clipboardManager.isMonitoring)
@@ -183,7 +205,7 @@ struct SettingsView: View {
                             clipboardManager.history.removeAll()
                         }
                         .foregroundColor(.red)
-                        
+
                         if clipboardManager.history.isEmpty {
                             Text("No clipboard history.")
                                 .foregroundColor(.secondary)
@@ -201,7 +223,7 @@ struct SettingsView: View {
                 .tabItem {
                     Text("Clipboard")
                 }
-                
+
                 VStack(alignment: .leading) {
                     Form {
                         Toggle("To-Do List Enabled", isOn: $isToDoListEnabled)
@@ -213,77 +235,64 @@ struct SettingsView: View {
                 .tabItem {
                     Text("To-Do List")
                 }
-                
+
                 VStack(alignment: .leading) {
                     Form {
-                        Section {
-                            Toggle("Enable Developer Tools", isOn: $areDeveloperToolsEnabled)
-                        }
+                        Toggle("Enable Developer Tools", isOn: $areDeveloperToolsEnabled)
                         if areDeveloperToolsEnabled {
-                            Section {
-                                Text("Port Management")
-                                Toggle("Warn Before Killing Ports", isOn: $showWarningBeforePortKill)
-                            }
+                            Text("Port Management")
+                                .font(.headline)
+                            Toggle("Warn Before Killing Ports", isOn: $showWarningBeforePortKill)
                         }
                     }
                 }
                 .tabItem {
                     Text("Dev Tools")
                 }
-                
+
                 VStack(alignment: .leading) {
                     Form {
-                        Section(header: Text("About")) {
-                            Text("Made by Liam Reynolds")
+                        HStack {
+                            Image("SuperMenuIconAsset")
+                                .resizable()
+                                .frame(width: 200, height: 200)
+                            VStack {
+                                Text("SuperMenu")
+                                    .font(.system(size: 48, weight: .bold))
+                                    .padding(.bottom, 8)
+                                Text("Made by Liam Reynolds")
+                                    .font(.system(size: 24, weight: .bold))
+                            }
                         }
-                        Section(header: Text("Recommended Productivity Apps")) {
+                        Text("Recommended Productivity Apps")
+                            .font(.headline)
                             HStack {
                                 Image(systemName: "sparkles")
                                 Link("Raycast", destination: URL(string: "https://www.raycast.com/")!)
                                     .lineLimit(nil)
                             }
-                            
+
                             Label {
                                 Link("Clop", destination: URL(string: "https://lowtechguys.com/clop/")!)
                             } icon: {
                                 Image(systemName: "bag.circle")
                             }
-                            
+
                             Label {
                                 Link("App Cleaner & Uninstaller", destination: URL(string: "https://freemacsoft.net/appcleaner/")!)
                             } icon: {
                                 Image(systemName: "trash")
                             }
-                            
+
                             Text("I am not associated with these applications. They are just personal recommendations.")
                                 .font(.footnote)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(.secondary)
                                 .padding(.top, 4)
                                 .fixedSize(horizontal: false, vertical: true)
-                        }
-                        Section(header: Text("Github")) {
-                            Link("View SuperMenu on GitHub", destination: URL(string: "https://github.com/Doyboy1005152/SuperMenu")!)
-                            Link("Developer GitHub Profile", destination: URL(string: "https://github.com/Doyboy1005152")!)
-                        }
-                        Section(header: Text("Permissions")) {
-                            Button("Refresh Permissions") {
-                                _ = Bundle.main.bundlePath
-                                let appId = Bundle.main.bundleIdentifier ?? ""
-                                
-                                let script = """
-                            do shell script "tccutil reset Accessibility \(appId)"
-                            """
-                                
-                                var error: NSDictionary?
-                                if let scriptObject = NSAppleScript(source: script) {
-                                    scriptObject.executeAndReturnError(&error)
-                                }
-                                
-                                // Reopen the accessibility system preferences page
-                                let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
-                                NSWorkspace.shared.open(url)
-                            }
-                        }
+                        Text("Links")
+                            .font(.headline)
+                        Link("View SuperMenu on GitHub", destination: URL(string: "https://github.com/Doyboy1005152/SuperMenu")!)
+                        Link("Developer GitHub Profile", destination: URL(string: "https://github.com/Doyboy1005152")!)
                     }
                     .padding()
                     Spacer()

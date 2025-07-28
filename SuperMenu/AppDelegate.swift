@@ -321,10 +321,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         let clipboardMenuItem = NSMenuItem(title: "Clipboard History", action: #selector(showClipboardHistory), keyEquivalent: "")
         clipboardMenuItem.target = self
         menu.addItem(clipboardMenuItem)
-
-        let toDoListItem = NSMenuItem(title: "To-Do List", action: #selector(showToDoList), keyEquivalent: "")
-        toDoListItem.target = self
-        menu.addItem(toDoListItem)
+        
+        if isToDoListEnabled {
+            let toDoListItem = NSMenuItem(title: "To-Do List", action: #selector(showToDoList), keyEquivalent: "")
+            toDoListItem.target = self
+            menu.addItem(toDoListItem)
+        }
 
         let aboutItem = NSMenuItem(title: "About Me", action: #selector(openPortfolio), keyEquivalent: "")
         menu.addItem(aboutItem)
@@ -332,7 +334,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         let privacyItem = NSMenuItem(title: "Privacy Policy", action: #selector(openPrivacyPolicy), keyEquivalent: "")
         menu.addItem(privacyItem)
         
-        let makeWindowsProminentItem = NSMenuItem(title: "Make This App's Windows Prominent", action: #selector(showAllWindows), keyEquivalent: "")
+        let makeWindowsProminentItem = NSMenuItem(title: "Make This App's Windows Prominent", action: #selector(showAllWindows), keyEquivalent: "p")
         menu.addItem(makeWindowsProminentItem)
 
         menu.addItem(NSMenuItem(title: "Quit SuperMenu", action: #selector(quit), keyEquivalent: "q"))
