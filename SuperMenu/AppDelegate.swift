@@ -13,8 +13,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     @AppStorage("isClipboardHistoryEnabled") var isClipboardHistoryEnabled: Bool = true
     @AppStorage("isToDoListEnabled") var isToDoListEnabled: Bool = true
     @AppStorage("areDeveloperToolsEnabled") var areDevToolsEnabled: Bool = false
-    @AppStorage("isCURLTestEnabled") var isCURLTestEnabled: Bool = false
-    @AppStorage("isPortCheckingEnabled") var isPortCheckingEnabled: Bool = true
     @AppStorage("webRequestTestingEnabled") var webRequestTestingEnabled: Bool = true
     @State var firstRun: Bool = true
 
@@ -24,6 +22,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     var cURLWindow: NSWindow?
     var portsWindow: NSWindow?
     var HTTPTestWindow: NSWindow?
+    var JWTDecoderWindow: NSWindow?
 
     // Script shortcut bindings stored in UserDefaults
     var scriptShortcutBindings: [String: URL] {
@@ -125,6 +124,32 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         newWindow.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
         cURLWindow = newWindow
+    }
+    
+    @objc func openJWTDecoderWindow() {
+        if let window = JWTDecoderWindow {
+            window.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 500, height: 800),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        window.center()
+        window.title = "JWT Decoder"
+        window.contentView = NSHostingView(
+            rootView: JWTDecoderView()
+                .frame(minWidth: 1200, minHeight: 500)
+                .padding()
+        )
+        window.isReleasedWhenClosed = false
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        JWTDecoderWindow = window
     }
 
     @objc func openPortsWindow() {
@@ -279,10 +304,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                 webRequestMenu.addItem(HTTPTestItem)
             }
 
-            if isPortCheckingEnabled {
-                let portCheckingItem = NSMenuItem(title: "Port Management", action: #selector(openPortsWindow), keyEquivalent: "")
-                devToolsSubmenu.addItem(portCheckingItem)
-            }
+            let portCheckingItem = NSMenuItem(title: "Port Management", action: #selector(openPortsWindow), keyEquivalent: "")
+            devToolsSubmenu.addItem(portCheckingItem)
+            
+            let JWTDecoderItem = NSMenuItem(title: "JWT Decoder", action: #selector(openJWTDecoderWindow), keyEquivalent: "")
+            devToolsSubmenu.addItem(JWTDecoderItem)
         }
 
         let openSettingsItem = NSMenuItem(title: "Settings...", action: #selector(showSettingsWindow), keyEquivalent: ",")

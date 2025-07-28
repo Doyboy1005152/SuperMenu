@@ -13,7 +13,6 @@ struct SettingsView: View {
     @AppStorage("areDeveloperToolsEnabled") private var areDeveloperToolsEnabled: Bool = false
     @AppStorage("isCURLTestEnabled") private var isCURLTestEnabled: Bool = false
     @AppStorage("showWarningBeforePortKill") private var showWarningBeforePortKill: Bool = true
-    @AppStorage("isPortCheckingEnabled") private var isPortCheckingEnabled: Bool = true
     
     let appDelegate = AppDelegate()
 
@@ -222,11 +221,7 @@ struct SettingsView: View {
                         }
                         if areDeveloperToolsEnabled {
                             Section {
-                                Toggle("cURL Test Enabled", isOn: $isCURLTestEnabled)
-                            }
-                            
-                            Section {
-                                Toggle("Port Management Enabled", isOn: $isPortCheckingEnabled)
+                                Text("Port Management")
                                 Toggle("Warn Before Killing Ports", isOn: $showWarningBeforePortKill)
                             }
                         }

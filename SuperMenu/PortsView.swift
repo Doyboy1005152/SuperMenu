@@ -122,7 +122,3 @@ struct PortsView: View {
         }
     }
 }
-
-#Preview {
-    PortsView()
-}
