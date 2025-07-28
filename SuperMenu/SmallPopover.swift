@@ -28,7 +28,7 @@ class SmallPopover {
             Text(message)
                 .foregroundColor(.white)
                 .padding()
-                .background(Color.black.opacity(0.5))
+                .background(Color.black.opacity(0.25))
                 .cornerRadius(10)
         )
         hostingView.frame = NSRect(x: 0, y: 0, width: 300, height: 100)
@@ -43,7 +43,7 @@ class SmallPopover {
             window.animator().alphaValue = 1
         }) {
             // Delay 1 second, then fade out
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                 NSAnimationContext.runAnimationGroup({ context in
                     context.duration = 0.5
                     window.animator().alphaValue = 0

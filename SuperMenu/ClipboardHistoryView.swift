@@ -16,10 +16,26 @@ struct ClipboardHistoryView: View {
                         Text(item)
                             .lineLimit(1)
                             .truncationMode(.tail)
-                            .onTapGesture {
-                                clipboardManager.copyToClipboard(item)
-                                presentationMode.wrappedValue.dismiss()
-                            }
+                        Spacer()
+                        Button("Copy") {
+                            clipboardManager.copyToClipboard(item)
+                            presentationMode.wrappedValue.dismiss()
+                        }
+                        Button("View") {
+                            let detailWindow = NSWindow(
+                                contentRect: NSRect(x: 0, y: 0, width: 500, height: 300),
+                                styleMask: [.titled, .closable, .resizable],
+                                backing: .buffered,
+                                defer: false
+                            )
+                            detailWindow.isReleasedWhenClosed = false
+                            detailWindow.center()
+                            detailWindow.title = "Clipboard Item"
+                            detailWindow.contentView = NSHostingView(rootView:
+                                ClipboardDetailView(text: item)
+                            )
+                            detailWindow.makeKeyAndOrderFront(nil)
+                        }
                         Button("Remove") {
                             if let i = clipboardManager.history.firstIndex(where: { $0 == item }) {
                                 clipboardManager.history.remove(at: i)
@@ -30,5 +46,18 @@ struct ClipboardHistoryView: View {
             }
             .frame(minWidth: 300, minHeight: 400)
         }
+    }
+}
+
+struct ClipboardDetailView: View {
+    let text: String
+
+    var body: some View {
+        ScrollView {
+            Text(text)
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .frame(minWidth: 400, minHeight: 300)
     }
 }

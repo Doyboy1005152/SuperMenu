@@ -125,7 +125,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         NSApp.activate(ignoringOtherApps: true)
         cURLWindow = newWindow
     }
-    
+
     @objc func openJWTDecoderWindow() {
         if let window = JWTDecoderWindow {
             window.makeKeyAndOrderFront(nil)
@@ -306,10 +306,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
 
             let portCheckingItem = NSMenuItem(title: "Port Management", action: #selector(openPortsWindow), keyEquivalent: "")
             devToolsSubmenu.addItem(portCheckingItem)
-            
+
             let JWTDecoderItem = NSMenuItem(title: "JWT Decoder", action: #selector(openJWTDecoderWindow), keyEquivalent: "")
             devToolsSubmenu.addItem(JWTDecoderItem)
-            
+
             let UUIDItem = NSMenuItem(title: "Generate UUID & Copy to Clipboard", action: #selector(generateUUID), keyEquivalent: "")
             devToolsSubmenu.addItem(UUIDItem)
         }
@@ -331,6 +331,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
 
         let privacyItem = NSMenuItem(title: "Privacy Policy", action: #selector(openPrivacyPolicy), keyEquivalent: "")
         menu.addItem(privacyItem)
+        
+        let makeWindowsProminentItem = NSMenuItem(title: "Make This App's Windows Prominent", action: #selector(showAllWindows), keyEquivalent: "")
+        menu.addItem(makeWindowsProminentItem)
 
         menu.addItem(NSMenuItem(title: "Quit SuperMenu", action: #selector(quit), keyEquivalent: "q"))
 
@@ -384,15 +387,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         NSApp.activate(ignoringOtherApps: true)
         toDoListWindow = window
     }
-    
+
     @objc func generateUUID() {
         let UUIDString = UUID().uuidString
-        
-        //Copy the UUID to the clipboard
+
+        // Copy the UUID to the clipboard
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(UUIDString, forType: .string)
-        
+
         SmallPopover.showCenteredMessage("Copied to clipboard (:")
     }
 
@@ -548,9 +551,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
 
     @objc func openPrivacyPolicy() {
+        
     }
 
     @objc func openPortfolio() {
+        
     }
 
     @objc func toggleLaunchAtLogin(_ sender: NSMenuItem) {
@@ -564,6 +569,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
 
     @objc func menuButtonClicked() {
+        
+    }
+    
+    @objc func showAllWindows() {
+        for window in NSApp.windows {
+            window.makeKeyAndOrderFront(nil)
+        }
+        NSApp.activate(ignoringOtherApps: true)
     }
 
     @objc func ejectAllDisks() {
