@@ -309,6 +309,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             
             let JWTDecoderItem = NSMenuItem(title: "JWT Decoder", action: #selector(openJWTDecoderWindow), keyEquivalent: "")
             devToolsSubmenu.addItem(JWTDecoderItem)
+            
+            let UUIDItem = NSMenuItem(title: "Generate UUID & Copy to Clipboard", action: #selector(generateUUID), keyEquivalent: "")
+            devToolsSubmenu.addItem(UUIDItem)
         }
 
         let openSettingsItem = NSMenuItem(title: "Settings...", action: #selector(showSettingsWindow), keyEquivalent: ",")
@@ -360,8 +363,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         updateSuperShortcutMonitoring()
     }
 
-    // compareVersions function removed
-
     @objc func showToDoList() {
         if let window = toDoListWindow {
             window.makeKeyAndOrderFront(nil)
@@ -382,6 +383,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
         toDoListWindow = window
+    }
+    
+    @objc func generateUUID() {
+        let UUIDString = UUID().uuidString
+        
+        //Copy the UUID to the clipboard
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(UUIDString, forType: .string)
+        
+        SmallPopover.showCenteredMessage("Copied to clipboard (:")
     }
 
     @objc func showHTTPTestWindow() {
