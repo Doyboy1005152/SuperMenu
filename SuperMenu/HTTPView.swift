@@ -67,7 +67,8 @@ struct HTTPView: View {
                     .padding(8)
                     .background(Color.gray.opacity(0.1))
                     .cornerRadius(8)
-            }
+            } 
+            
             Button("Copy Response") {
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(responseText, forType: .string)

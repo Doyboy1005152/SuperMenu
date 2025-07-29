@@ -20,6 +20,7 @@ class SmallPopover {
             let message: String
             let firstImage: String?
             let secondImage: String?
+            let duration: TimeInterval
 
             @State private var currentImage: String?
 
@@ -40,7 +41,7 @@ class SmallPopover {
                 .onAppear {
                     currentImage = firstImage
                     if let second = secondImage {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + self.duration / 2) {
                             withAnimation {
                                 currentImage = second
                             }
@@ -51,7 +52,7 @@ class SmallPopover {
         }
 
         let hostingView = NSHostingView(rootView:
-            MessageView(message: message, firstImage: systemImage, secondImage: secondSystemImage)
+            MessageView(message: message, firstImage: systemImage, secondImage: secondSystemImage, duration: duration)
         )
 
         window.contentView = hostingView
