@@ -16,7 +16,7 @@ SuperMenu is a macOS menu bar utility designed to simplify common developer and 
 **SuperMenu is not ready for release yet, you can compile it yourself for now though. It will be released around November 20th, and maybe earlier in a beta form.**
 
 ## Privacy
-SuperMenu does not collect/store **ANY** data except on your device for the purpose of storing your settings, To-Do List Items.
+SuperMenu does not collect/store **ANY** data except on your device for the purpose of storing your settings, To-Do List Items, etc.
 
 ## Permissions
 
