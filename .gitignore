@@ -1,4 +1,12 @@
+# Ignore keys file
+/Assets/keys.json
+
+# Xcode workspace settings
 *.xcworkspace
 *.xcuserstate
+
+# Xcode project user data
 *.xcodeproj/xcuserdata/
+
+# Xcode workspace data inside project
 *.xcodeproj/project.xcworkspace/
