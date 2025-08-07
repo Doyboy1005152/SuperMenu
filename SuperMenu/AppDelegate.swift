@@ -287,31 +287,42 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             print("Error listing disks for submenu: \(error)")
         }
 
-        let devToolsSubmenu = NSMenu(title: "Dev Tools")
-        let devToolsItem = NSMenuItem(title: "Dev Tools", action: nil, keyEquivalent: "")
-        devToolsItem.submenu = devToolsSubmenu
         if areDevToolsEnabled {
+            let devToolsSubmenu = NSMenu(title: "Dev Tools")
+            let devToolsItem = NSMenuItem(title: "Dev Tools", action: nil, keyEquivalent: "d")
+            devToolsItem.submenu = devToolsSubmenu
             menu.addItem(devToolsItem)
             if webRequestTestingEnabled {
                 let webRequestMenu = NSMenu(title: "Web Request Tests")
                 let webRequestItem = NSMenuItem(title: "Web Request Tests", action: nil, keyEquivalent: "")
                 webRequestItem.submenu = webRequestMenu
                 devToolsSubmenu.addItem(webRequestItem)
-                let cURLTestItem = NSMenuItem(title: "cURL", action: #selector(openCURLWindow), keyEquivalent: "")
+                let cURLTestItem = NSMenuItem(title: "cURL", action: #selector(openCURLWindow), keyEquivalent: "c")
                 cURLTestItem.target = self
                 webRequestMenu.addItem(cURLTestItem)
-                let HTTPTestItem = NSMenuItem(title: "HTTP", action: #selector(showHTTPTestWindow), keyEquivalent: "")
+                let HTTPTestItem = NSMenuItem(title: "HTTP", action: #selector(showHTTPTestWindow), keyEquivalent: "h")
                 webRequestMenu.addItem(HTTPTestItem)
             }
 
-            let portCheckingItem = NSMenuItem(title: "Port Management", action: #selector(openPortsWindow), keyEquivalent: "")
+            let portCheckingItem = NSMenuItem(title: "Port Management...", action: #selector(openPortsWindow), keyEquivalent: "")
             devToolsSubmenu.addItem(portCheckingItem)
 
-            let JWTDecoderItem = NSMenuItem(title: "JWT Decoder", action: #selector(openJWTDecoderWindow), keyEquivalent: "")
+            let JWTDecoderItem = NSMenuItem(title: "JWT Decoder...", action: #selector(openJWTDecoderWindow), keyEquivalent: "")
             devToolsSubmenu.addItem(JWTDecoderItem)
 
             let UUIDItem = NSMenuItem(title: "Generate UUID & Copy to Clipboard", action: #selector(generateUUID), keyEquivalent: "")
             devToolsSubmenu.addItem(UUIDItem)
+            
+            let base64Submenu = NSMenu(title: "Base64")
+            let base64Item = NSMenuItem(title: "Base64", action: nil, keyEquivalent: "b")
+            base64Item.submenu = base64Submenu
+            devToolsSubmenu.addItem(base64Item)
+            
+            let toBase64Item = NSMenuItem(title: "Encode Clipboard", action: #selector(convertToBase64), keyEquivalent: "")
+            base64Submenu.addItem(toBase64Item)
+            
+            let fromBase64Item = NSMenuItem(title: "Decode Clipboard", action: #selector(decodeBase64), keyEquivalent: "")
+            base64Submenu.addItem(fromBase64Item)
         }
 
         let openSettingsItem = NSMenuItem(title: "Settings...", action: #selector(showSettingsWindow), keyEquivalent: ",")
@@ -399,6 +410,44 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         pasteboard.setString(UUIDString, forType: .string)
 
         SmallPopover.showCenteredMessage("Copied UUID to clipboard", systemImage: "document.on.clipboard", secondSystemImage: "checkmark", duration: 2.0)
+    }
+    
+    @objc func convertToBase64() {
+        let pastepoard = NSPasteboard.general
+        let pbContents = pastepoard.string(forType: .string) ?? ""
+        
+        let data = pbContents.data(using: .utf8)!
+        let base64String = data.base64EncodedString()
+        
+        pastepoard.clearContents()
+        pastepoard.setString(base64String, forType: .string)
+        
+        SmallPopover.showCenteredMessage("Clipboard encoded!", systemImage: "document.on.clipboard", secondSystemImage: "checkmark", duration: 2.0)
+    }
+    
+    @objc func decodeBase64() {
+        let pasteboard = NSPasteboard.general
+        let pbContents = pasteboard.string(forType: .string) ?? ""
+        
+        guard let data = Data(base64Encoded: pbContents),
+              let decodedString = String(data: data, encoding: .utf8) else {
+            SmallPopover.showCenteredMessage(
+                "Invalid Base64 String",
+                systemImage: "exclamationmark.triangle.fill",
+                duration: 2.0
+            )
+            return
+        }
+
+        pasteboard.clearContents()
+        pasteboard.setString(decodedString, forType: .string)
+
+        SmallPopover.showCenteredMessage(
+            "Clipboard decoded!",
+            systemImage: "document.on.clipboard",
+            secondSystemImage: "checkmark",
+            duration: 2.0
+        )
     }
 
     @objc func showHTTPTestWindow() {
