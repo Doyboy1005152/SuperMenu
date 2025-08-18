@@ -416,38 +416,46 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         let pastepoard = NSPasteboard.general
         let pbContents = pastepoard.string(forType: .string) ?? ""
         
-        let data = pbContents.data(using: .utf8)!
-        let base64String = data.base64EncodedString()
-        
-        pastepoard.clearContents()
-        pastepoard.setString(base64String, forType: .string)
-        
-        SmallPopover.showCenteredMessage("Clipboard encoded!", systemImage: "document.on.clipboard", secondSystemImage: "checkmark", duration: 2.0)
+        if !pbContents.isEmpty {
+            let data = pbContents.data(using: .utf8)!
+            let base64String = data.base64EncodedString()
+            
+            pastepoard.clearContents()
+            pastepoard.setString(base64String, forType: .string)
+            
+            SmallPopover.showCenteredMessage("Clipboard encoded!", systemImage: "document.on.clipboard", secondSystemImage: "checkmark", duration: 2.0)
+        } else {
+            SmallPopover.showCenteredMessage("No content to encode", systemImage: "exclamationmark", duration: 2.0)
+        }
     }
     
     @objc func decodeBase64() {
         let pasteboard = NSPasteboard.general
         let pbContents = pasteboard.string(forType: .string) ?? ""
         
-        guard let data = Data(base64Encoded: pbContents),
-              let decodedString = String(data: data, encoding: .utf8) else {
+        if !pbContents.isEmpty {
+            guard let data = Data(base64Encoded: pbContents),
+                  let decodedString = String(data: data, encoding: .utf8) else {
+                SmallPopover.showCenteredMessage(
+                    "Invalid Base64 String",
+                    systemImage: "exclamationmark.triangle.fill",
+                    duration: 2.0
+                )
+                return
+            }
+            
+            pasteboard.clearContents()
+            pasteboard.setString(decodedString, forType: .string)
+            
             SmallPopover.showCenteredMessage(
-                "Invalid Base64 String",
-                systemImage: "exclamationmark.triangle.fill",
+                "Clipboard decoded!",
+                systemImage: "document.on.clipboard",
+                secondSystemImage: "checkmark",
                 duration: 2.0
             )
-            return
+        } else {
+            SmallPopover.showCenteredMessage("No content to decode", systemImage: "exclamationmark", duration: 2.0)
         }
-
-        pasteboard.clearContents()
-        pasteboard.setString(decodedString, forType: .string)
-
-        SmallPopover.showCenteredMessage(
-            "Clipboard decoded!",
-            systemImage: "document.on.clipboard",
-            secondSystemImage: "checkmark",
-            duration: 2.0
-        )
     }
 
     @objc func showHTTPTestWindow() {
